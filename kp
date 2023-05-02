@@ -11,6 +11,7 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit import PromptSession
 import matplotlib.pyplot as plt
+from prompt_toolkit.shortcuts.prompt import CompleteStyle
 
 global s, cfg # prompt toolkit seems to like globals
 cfg = Config()
@@ -46,12 +47,12 @@ def _(event):
 def _(event):
     with open(cfg.plot_name, "w") as f:
         f.write("")
-    subprocess.run(["$EDITOR", cfg.plot_name])
+    subprocess.run([f"$EDITOR {cfg.plot_name}"])
     with open(cfg.plot_name) as f:
         name = f.read().strip()
         if name:
             plt.savefig(name, format="png")
-    print("plot saved to", name)
+            print("plot saved to", name)
     event.app.exit()
 
 class RegexCompleter(Completer):
