@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+import os
+import time
+import time
+import asyncio
+import subprocess
+from kittyplot.loaders import *
+from kittyplot.config import *
+from kittyplot.plot import *
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit import PromptSession
+import matplotlib.pyplot as plt
+
+global s, cfg # prompt toolkit seems to like globals
+cfg = Config()
+
+def update_and_draw_grid(s: State):
+    if len(s.matches) == 0:
+        return
+    os.system("clear")
+    plt.clf()
+    grid = make_grid(cfg, s, [metric for metric in s.matches])
+    if grid is not None:
+        plt.savefig(cfg.plot_file, format="png")
+        os.system(f"kitten icat --unicode-placeholder {cfg.plot_file}")
+        plt.close("all")
+        print()
+
+
+bindings = KeyBindings()
+
+@bindings.add('?')
+def _(event):
+    subprocess.run(f"$EDITOR {cfg.mpl_settings}", shell=True)
+    update_and_draw_grid(s)
+    event.app.exit()
+
+@bindings.add('\'')
+def _(event):
+    subprocess.run(f"$EDITOR {cfg.runlist}", shell=True)
+    update_and_draw_grid(s)
+    event.app.exit()
+
+@bindings.add('/')
+def _(event):
+    with open(cfg.plot_name, "w") as f:
+        f.write("")
+    subprocess.run(["$EDITOR", cfg.plot_name])
+    with open(cfg.plot_name) as f:
+        name = f.read().strip()
+        if name:
+            plt.savefig(name, format="png")
+    print("plot saved to", name)
+    event.app.exit()
+
+class RegexCompleter(Completer):
+    def get_completions(self, document, complete_event):
+        matches = s.get_matches(document.text)
+        for match in matches:
+            if any(match.endswith(s) for s in "_min _max _std".split()):
+                continue
+            if match.endswith("_mean"):
+                yield Completion(match[:-5], start_position=-len(document.text))
+                continue
+            yield Completion(match, start_position=-len(document.text))
+
+async def main(cfg: Config, s: State):
+    session = PromptSession( key_bindings=bindings, completer=RegexCompleter(),
+                           complete_style=CompleteStyle.READLINE_LIKE)
+
+    while True:
+        try:
+            time.sleep(0.1)
+            text = await asyncio.wait_for(session.prompt_async('> ', vi_mode=True,  default='.*'), timeout=30)
+        except KeyboardInterrupt:  # Ctrl-C
+            continue
+        except EOFError:           # Ctrl-D
+            break
+        except asyncio.TimeoutError:
+            print("\r" + " "*40, end="")
+            await load(cfg.runlist)
+            update_and_draw_grid(s)
+        else:
+            if text and s.update_matches(text):
+                update_and_draw_grid(s)
+
+if __name__ == '__main__':
+    cfg = Config()
+    s = asyncio.run(load(cfg.runlist))
+    asyncio.run(main(cfg, s))
