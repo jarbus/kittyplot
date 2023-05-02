@@ -139,18 +139,19 @@ def make_grid(cfg, s: State, unfiltered_metrics: list):
     xsize = (size[0]*cfg.px) - 1
     ysize = (size[1]*cfg.px) - 1 if num_rows <= 2 else ((num_rows * size[1]*cfg.px)/2) - 1
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(xsize, ysize))
+    _, axes = plt.subplots(num_rows, num_cols, figsize=(xsize, ysize))
     axes = np.array(axes)
     worker_args = [(cfg, runs_to_plot, s.runs, met) for met in metrics]
     with Pool(len(metrics)) as pool:
         for ax, rastered in zip(axes.ravel(), pool.starmap(_plot_worker, worker_args)):
             ax.imshow(rastered)
             
-            # The following code hides axes
-            ax.get_xaxis().set_ticks([])
-            ax.get_yaxis().set_ticks([])
-            for spine in ax.spines.values():
-                spine.set_visible(False)
+    # Hide all ax ticks including empty ones, which are ignored by ^
+    for ax in axes.ravel():
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
     
     plt.subplots_adjust(hspace=0, wspace=0)
     return 1
