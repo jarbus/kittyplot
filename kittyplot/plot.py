@@ -1,7 +1,22 @@
+import numpy as np
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 from math import ceil, sqrt
-from state import State
+from .state import State
 import array, fcntl, termios # for get_terminal_size
+import io
+from copy import deepcopy
+from PIL import Image
+
+# https://towardsdatascience.com/plotting-in-parallel-with-matplotlib-and-python-f7efb3d944de
+def rasterize(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    pil_img = deepcopy(Image.open(buf))
+    buf.close()
+    
+    return pil_img
 
 def get_terminal_size():
     buf = array.array('H', [0, 0, 0, 0])
@@ -39,7 +54,7 @@ def apply_settings_to_ax(cfg, ax):
             elif line[0] == "legend":
                 ax.legend(loc=" ".join(line[1:])) 
 
-def plot(ax, metrics: dict, metric: str, label: str):
+def plot(ax, metrics: dict, metric: str, label, show_legend: bool = True):
     if metric not in metrics.keys():
         return
     ax.plot(metrics[metric], label=label, linewidth=4)
@@ -65,6 +80,8 @@ def plot(ax, metrics: dict, metric: str, label: str):
     std_maxes = [min(_max, mean+sqrt(std)) for _max, mean, std in 
             zip(metrics[max_met], metrics[metric], metrics[std_met])]
     ax.fill_between(xs, std_mins, std_maxes, alpha=0.2) 
+    if show_legend:
+        ax.legend(loc="upper left")
 
 def compute_num_rows_and_cols(num_metrics: int):
     """Determines the size of the graph grid"""
@@ -88,6 +105,20 @@ def get_ax(axes, i, num_rows, num_cols):
         ax = axes[r,c]
     return ax
 
+def _plot_worker(cfg, runs_to_plot: list[str], runs: dict, metric: str):
+    show_legend = len(runs) > 1
+    fig, ax = plt.subplots()
+    
+    for run in runs_to_plot:
+        label = None if len(runs) < 2 else run
+        plot(ax, runs[run], metric, label, show_legend=show_legend)
+    apply_settings_to_ax(cfg, ax)
+    pil_img = rasterize(fig)
+    plt.close()
+    
+    return pil_img
+
+
 
 # Image generation
 def make_grid(cfg, s: State, unfiltered_metrics: list):
@@ -107,16 +138,19 @@ def make_grid(cfg, s: State, unfiltered_metrics: list):
     size = get_terminal_size()
     xsize = (size[0]*cfg.px) - 1
     ysize = (size[1]*cfg.px) - 1 if num_rows <= 2 else ((num_rows * size[1]*cfg.px)/2) - 1
+
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(xsize, ysize))
-    for i, metric in enumerate(metrics):
-        ax = get_ax(axes, i, num_rows, num_cols)
-
-        for run in runs_to_plot:
-            label = None if len(s.runs) < 2 else run
-            plot(ax, s.runs[run], metric, label)
+    axes = np.array(axes)
+    worker_args = [(cfg, runs_to_plot, s.runs, met) for met in metrics]
+    with Pool(len(metrics)) as pool:
+        for ax, rastered in zip(axes.ravel(), pool.starmap(_plot_worker, worker_args)):
+            ax.imshow(rastered)
             
-        if len(s.runs) > 1:
-            ax.legend(loc="upper left")
-
-        apply_settings_to_ax(cfg, ax)
+            # The following code hides axes
+            ax.get_xaxis().set_ticks([])
+            ax.get_yaxis().set_ticks([])
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+    
+    plt.subplots_adjust(hspace=0, wspace=0)
     return 1

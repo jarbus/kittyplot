@@ -7,7 +7,7 @@ import os.path as osp
 import logging as log
 from collections import defaultdict
 from abc import ABC, abstractmethod
-from state import *
+from .state import *
 
 class AbstractLoader(ABC):
     @abstractmethod
