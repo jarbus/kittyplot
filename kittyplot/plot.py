@@ -54,7 +54,7 @@ def apply_settings_to_ax(cfg, ax):
             elif line[0] == "legend":
                 ax.legend(loc=" ".join(line[1:])) 
 
-def plot(ax, metrics: dict, metric: str, label, show_legend: bool = True):
+def plot(cfg, ax, metrics: dict, metric: str, label, show_legend: bool = True):
     if metric not in metrics.keys():
         return
     ax.plot(metrics[metric], label=label, linewidth=4)
@@ -74,7 +74,11 @@ def plot(ax, metrics: dict, metric: str, label, show_legend: bool = True):
     if std_met not in metrics.keys():
         return
     # plot std if exists
-    xs = list(range(len(metrics[metric])))
+    if cfg.xtick_col in metrics.keys():
+        xs = metrics[cfg.xtick_col]
+    else:
+        xs = list(range(len(metrics[metric])))
+
     std_mins = [max(_min, mean-sqrt(std)) for _min, mean, std in 
             zip(metrics[min_met], metrics[metric], metrics[std_met])]
     std_maxes = [min(_max, mean+sqrt(std)) for _max, mean, std in 
@@ -111,14 +115,12 @@ def _plot_worker(cfg, runs_to_plot: list[str], runs: dict, metric: str):
     
     for run in runs_to_plot:
         label = None if len(runs) < 2 else run
-        plot(ax, runs[run], metric, label, show_legend=show_legend)
+        plot(cfg, ax, runs[run], metric, label, show_legend=show_legend)
     apply_settings_to_ax(cfg, ax)
     pil_img = rasterize(fig)
     plt.close()
     
     return pil_img
-
-
 
 # Image generation
 def make_grid(cfg, s: State, unfiltered_metrics: list):

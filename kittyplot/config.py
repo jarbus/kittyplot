@@ -8,3 +8,4 @@ class Config:
         with open(self.mpl_settings, "w") as f:
             f.write("")
         self.px = 1/plt.rcParams['figure.dpi']  # pixel in inches
+        self.xtick_col = "step"
