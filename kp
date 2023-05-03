@@ -30,8 +30,8 @@ class Config:
 
 class State:
     def __init__(self, runs, keys):
-        self.old_matches: list[str] = []
-        self.matches: list[str] = []
+        self.old_matches = []
+        self.matches = []
         self.runs = runs
         self.keys = keys
         self.old_text = ""
@@ -161,7 +161,7 @@ def get_ax(axes, i, num_rows, num_cols):
         ax = axes[r,c]
     return ax
 
-def _plot_worker(cfg, runs_to_plot: list[str], runs: dict, metric: str):
+def _plot_worker(cfg, runs_to_plot, runs: dict, metric: str):
     show_legend = len(runs) > 1
     fig, ax = plt.subplots()
     
