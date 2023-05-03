@@ -81,10 +81,10 @@ def apply_settings_before_plot(cfg):
         for line in f:
             line = line.strip().split()
             if line[0] == "style":
-                if line[1] == "dark":
-                    plt.style.use(["dark_background", "fast"])
-                else:
+                if line[1] == "light":
                     plt.style.use(["classic", "fast"])
+                else:
+                    plt.style.use(["dark_background", "fast"])
 
 def apply_settings_to_ax(cfg, ax):
     with open(cfg.mpl_settings) as f:
