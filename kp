@@ -167,7 +167,9 @@ def _plot_worker(cfg, runs_to_plot, runs: dict, metric: str):
     
     for run in runs_to_plot:
         label = None if len(runs) < 2 else run
-        plot(cfg, ax, runs[run], metric, label, show_legend=show_legend)
+        plot(cfg, ax, runs[run], metric, label)
+    if show_legend:
+        ax.legend(loc="upper left")
     apply_settings_to_ax(cfg, ax)
     pil_img = rasterize(fig)
     plt.close()
