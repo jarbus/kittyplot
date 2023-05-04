@@ -77,14 +77,13 @@ def get_terminal_size():
 
 def apply_settings_before_plot(cfg):
     # run mpl commands before plotting
+    plt.style.use(["dark_background", "fast"])
     with open(cfg.mpl_settings) as f:
         for line in f:
             line = line.strip().split()
             if line[0] == "style":
                 if line[1] == "light":
                     plt.style.use(["classic", "fast"])
-                else:
-                    plt.style.use(["dark_background", "fast"])
 
 def apply_settings_to_ax(cfg, ax):
     with open(cfg.mpl_settings) as f:
@@ -164,6 +163,7 @@ def get_ax(axes, i, num_rows, num_cols):
 def _plot_worker(cfg, runs_to_plot, runs: dict, metric: str):
     show_legend = len(runs) > 1
     fig, ax = plt.subplots()
+    apply_settings_before_plot(cfg)
     
     for run in runs_to_plot:
         label = None if len(runs) < 2 else run
@@ -187,13 +187,13 @@ def make_grid(cfg, s: State, unfiltered_metrics: list):
     with open(cfg.runlist) as f:
         runs_to_plot = [r.strip() for r in f.readlines() if not r.startswith("#")]
 
-    apply_settings_before_plot(cfg)
 
     size = get_terminal_size()
     xsize = (size[0]*cfg.px) - 1
     ysize = (size[1]*cfg.px) - 1 if num_rows <= 2 else ((num_rows * size[1]*cfg.px)/2) - 1
 
     _, axes = plt.subplots(num_rows, num_cols, figsize=(xsize, ysize))
+    apply_settings_before_plot(cfg)
     axes = np.array(axes)
     worker_args = [(cfg, runs_to_plot, s.runs, met) for met in metrics]
     with Pool(len(metrics)) as pool:
