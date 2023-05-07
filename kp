@@ -225,16 +225,16 @@ def update_and_draw_grid(s: State):
         print()
 
 bindings = KeyBindings()
-
+EDITOR = os.environ.get("EDITOR", "vim")
 @bindings.add('?')
 def _(event):
-    subprocess.run(f"$EDITOR {cfg.mpl_settings}", shell=True)
+    subprocess.run(f"{EDITOR} {cfg.mpl_settings}".split(), shell=True)
     update_and_draw_grid(s)
     event.app.exit()
 
 @bindings.add('\'')
 def _(event):
-    subprocess.run(f"$EDITOR {cfg.runlist}", shell=True)
+    subprocess.run(f"{EDITOR} {cfg.runlist}".split(), shell=True)
     update_and_draw_grid(s)
     event.app.exit()
 
@@ -242,7 +242,7 @@ def _(event):
 def _(event):
     with open(cfg.plot_name, "w") as f:
         f.write("")
-    subprocess.run([f"$EDITOR {cfg.plot_name}"])
+    subprocess.run(f"{EDITOR} {cfg.plot_name}".split())
     with open(cfg.plot_name) as f:
         name = f.read().strip()
         if name:
