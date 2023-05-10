@@ -219,7 +219,7 @@ def update_and_draw_grid(s: State):
     plt.clf()
     grid = make_grid(cfg, s, [metric for metric in s.matches])
     if grid is not None:
-        plt.savefig(cfg.plot_file, format="png")
+        plt.savefig(cfg.plot_file, format="png", bbox_inches="tight", pad_inches=0)
         os.system(f"kitten icat --unicode-placeholder {cfg.plot_file}")
         plt.close("all")
         print()
