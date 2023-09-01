@@ -108,7 +108,11 @@ def apply_settings_to_ax(cfg, ax):
 def plot(cfg, ax, metrics: dict, metric: str, label, show_legend: bool = True):
     if metric not in metrics.keys():
         return
-    ax.plot(metrics[metric], label=label, linewidth=4)
+    if cfg.xtick_col in metrics.keys():
+        xs = metrics[cfg.xtick_col]
+    else:
+        xs = list(range(len(metrics[metric])))
+    ax.plot(xs, metrics[metric], label=label, linewidth=4)
 
     # Skip processing plot statistics if there are none
     if not metric.endswith("_mean"):
@@ -119,16 +123,12 @@ def plot(cfg, ax, metrics: dict, metric: str, label, show_legend: bool = True):
     min_met = metric[:-5]+"_min"
     max_met = metric[:-5]+"_max"
     std_met = metric[:-5]+"_std"
-    ax.fill_between(list(range(len(metrics[metric]))),
+    ax.fill_between(xs,
                     metrics[min_met],
                     metrics[max_met],alpha=0.2)
     if std_met not in metrics.keys():
         return
     # plot std if exists
-    if cfg.xtick_col in metrics.keys():
-        xs = metrics[cfg.xtick_col]
-    else:
-        xs = list(range(len(metrics[metric])))
 
     std_mins = [max(_min, mean-sqrt(std)) for _min, mean, std in 
             zip(metrics[min_met], metrics[metric], metrics[std_met])]
