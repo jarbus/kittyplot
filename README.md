@@ -12,7 +12,7 @@ kittyplot provides a repl to interactively plot graphs at full resolution in the
 
 # Installation
 
-kittyplot as structued single python script `kp` you can throw in your `$PATH` on any machine.
+kittyplot is structued as a single python script `kp` you can throw in your `$PATH` on any machine.
 
 ## Requirements
 
