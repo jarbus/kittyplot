@@ -228,13 +228,13 @@ bindings = KeyBindings()
 EDITOR = os.environ.get("EDITOR", "vim")
 @bindings.add('?')
 def _(event):
-    subprocess.run(f"{EDITOR} {cfg.mpl_settings}".split(), shell=True)
+    subprocess.run(f"{EDITOR} {cfg.mpl_settings}".split())
     update_and_draw_grid(s)
     event.app.exit()
 
 @bindings.add('\'')
 def _(event):
-    subprocess.run(f"{EDITOR} {cfg.runlist}".split(), shell=True)
+    subprocess.run(f"{EDITOR} {cfg.runlist}".split())
     update_and_draw_grid(s)
     event.app.exit()
 
