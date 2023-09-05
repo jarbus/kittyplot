@@ -67,7 +67,6 @@ def rasterize(fig):
     buf.seek(0)
     pil_img = deepcopy(Image.open(buf))
     buf.close()
-    
     return pil_img
 
 def get_terminal_size():
@@ -173,7 +172,6 @@ def _plot_worker(cfg, runs_to_plot, runs: dict, metric: str):
     apply_settings_to_ax(cfg, ax)
     pil_img = rasterize(fig)
     plt.close()
-    
     return pil_img
 
 # Image generation
@@ -198,9 +196,12 @@ def make_grid(cfg, s: State, unfiltered_metrics: list):
     apply_settings_before_plot(cfg)
     axes = np.array(axes)
     worker_args = [(cfg, runs_to_plot, s.runs, met) for met in metrics]
-    with Pool(len(metrics)) as pool:
-        for ax, rastered in zip(axes.ravel(), pool.starmap(_plot_worker, worker_args)):
-            ax.imshow(rastered)
+    # Multiprocessing hangs on laptop
+    # with Pool(len(metrics)) as pool:
+    #     for ax, rastered in zip(axes.ravel(), pool.starmap(_plot_worker, worker_args)):
+    #         ax.imshow(rastered)
+    for ax, rastered in zip(axes.ravel(), [_plot_worker(*args) for args in worker_args]):
+        ax.imshow(rastered)
             
     # Hide all ax ticks including empty ones, which are ignored by ^
     for ax in axes.ravel():
