@@ -1,6 +1,6 @@
 # kittyplot
 
-![](recs/ex.png)
+![](recs/example.gif)
 
 kittyplot provides a repl to interactively plot graphs at full resolution in the terminal using kitty's [terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/). 
 
